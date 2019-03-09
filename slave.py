@@ -1,6 +1,7 @@
 from contracts import DCCInterface
 from web3 import Web3, HTTPProvider
 
+import io
 import requests
 import time
 import json
@@ -36,17 +37,11 @@ while True:
     # Do job
     postprocess = preprocess.upper()
 
-    # Push result back into ipfs
-    file_out = open('/tmp/out', 'wb')
-    file_out.write(postprocess)
-    file_out.flush()
-    file_out.close()
-
     m = hashlib.sha256()
-    m.update(open('/tmp/out', 'rb').read())
+    m.update(postprocess)
     post_file_hash = int.from_bytes(m.digest(), byteorder='big')
 
-    res = api.add('/tmp/out')
+    res = api.block_put(io.BytesIO(postprocess))
     post_ipfs_hash = res['Hash']
 
     print("file_hash:", post_file_hash, "ipfs:", post_ipfs_hash)
