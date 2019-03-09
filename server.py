@@ -1,6 +1,7 @@
 from flask import Flask
 
 app = Flask(__name__)
+jobs = []
 
 @app.route('/')
 def default():
@@ -8,7 +9,7 @@ def default():
 
 @app.route('/jobs')
 def get_jobs():
-    return 'Placeholder'
+    return str(jobs)
 
 if __name__ == '__main__':
     app.run()
