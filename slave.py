@@ -15,6 +15,7 @@ w3 = Web3([HTTPProvider('http://10.8.3.1:8545')])
 acct = w3.eth.account.privateKeyToAccount(private_key)
 w3.eth.defaultAccount = acct.address
 
+tasks_done = []
 docker_client = docker.from_env()
 
 
@@ -31,6 +32,11 @@ while True:
 
     # Get first available job
     contract_addr = lst[0]
+    if contract_addr in tasks_done:
+        continue
+
+    tasks_done.append(contract_addr)
+
     iface = DCCInterface(w3, contract_addr)
 
     print (iface)
@@ -56,7 +62,7 @@ while True:
     post_file_hash = int.from_bytes(m.digest(), byteorder='big')
 
     res = api.block_put(io.BytesIO(postprocess))
-    post_ipfs_hash = res['Hash']
+    post_ipfs_hash = res['Key']
 
     print("file_hash:", post_file_hash, "ipfs:", post_ipfs_hash)
     
