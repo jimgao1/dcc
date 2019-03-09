@@ -30,7 +30,8 @@ def thread_prune_entries():
                     'price': iface.get_price()
                 })
 
-                new_jobs.append(j)
+                if iface.get_in_progress():
+                    new_jobs.append(j)
             except Exception:
                 traceback.print_exc()
 
