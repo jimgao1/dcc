@@ -11,7 +11,7 @@ import tarfile
 import docker
 
 private_key = 'da8328e960737b1a47a7f6a8bc6575809c5c9c5cbbb9bc11c24f58024b018620'
-w3 = Web3([HTTPProvider('http://10.8.3.1:8545')])
+w3 = Web3([HTTPProvider('http://100.65.198.211:8545')])
 acct = w3.eth.account.privateKeyToAccount(private_key)
 w3.eth.defaultAccount = acct.address
 
@@ -24,7 +24,7 @@ while True:
     time.sleep(5)
 
     # Get jobs
-    r = requests.get('http://localhost:5000/api/jobs')
+    r = requests.get('http://45.79.145.106:5000/api/jobs')
     lst = json.loads(r.text.replace('\'', '"'))
     
     if len(lst) == 0:
@@ -42,7 +42,7 @@ while True:
     print (iface)
 
     # Get job resources
-    api = ipfsapi.connect('10.8.3.1', 5001)
+    api = ipfsapi.connect('45.79.145.106', 5001)
     # build_archive = io.BytesIO(api.block_get(iface.get_src_code()))
     open('/tmp/dcc-build.tar.gz', 'wb').write(api.cat(iface.get_src_code()))
 

@@ -30,9 +30,9 @@ def main():
     parser.add_argument('private_key', metavar='PRIVATE_KEY', type=str, help='private key to use')
     parser.add_argument('price', metavar='PRICE', type=int, help='price in WEI')
     parser.add_argument('clients', metavar='CLIENTS', type=int, help='number of clients to distribute against')
-    parser.add_argument('--ipfs', metavar='IPFS_ADDRESS', type=str, default='localhost:5001', help='ipfs address')
-    parser.add_argument('--tracker', metavar='TRACKER_ADDRESS', type=str, default='http://10.8.3.7:5000', help='tracker address')
-    parser.add_argument('--network', metavar='NETWORK', type=str, default='http://localhost:8545', help='ethereum network address')
+    parser.add_argument('--ipfs', metavar='IPFS_ADDRESS', type=str, default='45.79.145.106:5001', help='ipfs address')
+    parser.add_argument('--tracker', metavar='TRACKER_ADDRESS', type=str, default='http://45.79.145.106:5000', help='tracker address')
+    parser.add_argument('--network', metavar='NETWORK', type=str, default='http://100.65.198.211:8545', help='ethereum network address')
 
     args = parser.parse_args()
 
