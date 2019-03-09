@@ -1,5 +1,6 @@
 from flask import Flask, request
 from contracts import DCCInterface
+from web3 import Web3, HTTPProvider
 
 import json
 import _thread
@@ -9,6 +10,7 @@ import traceback
 app = Flask(__name__)
 jobs = []
 jobs_details = []
+web3 = Web3([HTTPProvider("http://10.8.3.1:8545")])
 
 
 def thread_prune_entries():
@@ -20,7 +22,7 @@ def thread_prune_entries():
         new_jobs_details = []
         for j in jobs:
             try:
-                iface = DCCInterface(j)
+                iface = DCCInterface(web3, j)
                 new_jobs_details.append({
                     'id': j,
                     'owner': iface.get_owner(),
