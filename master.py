@@ -3,6 +3,7 @@ import ipfsapi
 import requests
 import time
 import hash
+import tarfile
 from web3 import Web3, HTTPProvider
 
 import contracts
@@ -13,8 +14,11 @@ def ipfs_connect(addr):
 
     return ipfsapi.connect(host, int(port))
 
-def upload_file(ipfs, file):
-    res = ipfs.add(file)
+def upload_folder(ipfs, folder):
+    tar = tarfile.open('/tmp/dcc-build.tar.gz', 'w:gz')
+    tar.add(folder)
+    tar.close()
+    res = ipfs.add('/tmp/dcc-build.tar.gz')
     return res['Hash']
 
 def get_file(ipfs, hash):
@@ -22,7 +26,7 @@ def get_file(ipfs, hash):
 
 def main():
     parser = argparse.ArgumentParser(description="Distributed Compiler Collection")
-    parser.add_argument('file', metavar='FILE', type=str, help='file to compile')
+    parser.add_argument('folder', metavar='FOLDER', type=str, help='folder to compile')
     parser.add_argument('private_key', metavar='PRIVATE_KEY', type=str, help='private key to use')
     parser.add_argument('price', metavar='PRICE', type=int, help='price in WEI')
     parser.add_argument('clients', metavar='CLIENTS', type=int, help='number of clients to distribute against')
@@ -33,7 +37,7 @@ def main():
     args = parser.parse_args()
 
     ipfs = ipfs_connect(args.ipfs)
-    file_hash = upload_file(ipfs, args.file)
+    file_hash = upload_folder(ipfs, args.folder)
     print("uploaded to ipfs", file_hash)
 
     web3 = Web3([HTTPProvider(args.network)])
