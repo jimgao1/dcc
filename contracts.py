@@ -23,6 +23,15 @@ class DCCInterface:
 
         print("Contract with address {} intialized".format(self.contract.address))
 
+    def __str__(self):
+        return str({
+            'addr': self.contract_address,
+            'owner': self.get_owner(),
+            'in_progress': self.get_in_progress(),
+            'price': self.get_price(),
+            'src_code': self.get_src_code()
+        })
+
     def get_owner(self):
         return self.contract.functions.owner().call()
 
@@ -36,5 +45,5 @@ class DCCInterface:
         return self.contract.functions.srcCode().call()
 
     def submit_result(self, encodedBinary, binHash):
-        pass
+        self.contract.functions.submit(binHash, encodedBinary).transact()
     
