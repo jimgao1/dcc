@@ -16,7 +16,7 @@ def ipfs_connect(addr):
 
 def upload_folder(ipfs, folder):
     tar = tarfile.open('/tmp/dcc-build.tar.gz', 'w:gz')
-    tar.add(folder)
+    tar.add(folder, '')
     tar.close()
     res = ipfs.add('/tmp/dcc-build.tar.gz')
     return res['Hash']
@@ -66,9 +66,13 @@ def main():
         for slave_addr in good_slaves_addr:
             slave = contract.get_slave(slave_addrs[slave_addr])
             bin_data = get_file(ipfs, slave[1])
-            print(bin_data)
+
+            if hash.hash(bin_data) == slave[0]:
+                open('output', 'wb').write(bin_data)
+                return
         
-        print(good_slaves)
+        print("there were no good binaries")
+        return
     elif len(completion) != 1 and len(failed) == 1:
         print("there were large inconsistencies in compiling")
         return
