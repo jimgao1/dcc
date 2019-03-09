@@ -35,6 +35,30 @@ class DCCInterface:
     def get_src_code(self):
         return self.contract.functions.srcCode().call()
 
+    def get_finish_event(self):
+        if self.get_in_progress():
+            return None
+
+        completed_events = self.contract.events.JobCompleted.createFilter(fromBlock=0, toBlock='latest').get_new_entries()
+        print(completed_events)
+
+        if len(completed_events) == 1:
+            print(completed_events[0])
+            return completed_events[0]
+        elif len(completed_events) > 1:
+            raise Exception("completed more than once")
+
+        failed_events = self.contract.events.JobFailed.createFilter(fromBlock=0, toBlock='latest').get_new_entries()
+        print(failed_events)
+        if len(failed_events) == 1:
+            print(failed_events[0])
+            return failed_events
+        elif len(failed_events) > 1:
+            raise Exception("completed more than once")
+        
+        return None
+
+
     def submit_result(self, encodedBinary, binHash):
         pass
     

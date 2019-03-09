@@ -91,4 +91,15 @@ contract DCCJobContract {
             checkCompletion();
         }
     }
+    
+    function getSlaveAddresses() public view returns (address payable[] memory) {
+        require(msg.sender == owner);
+        return slaveAddresses;
+    }
+
+    function getSlave(address slave) public view returns (uint256, string memory) {
+        require(msg.sender == owner);
+        Slave memory ret = slaves[slave];
+        return (ret.hash, ret.encodedBinary);
+    }
 }
