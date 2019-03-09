@@ -29,7 +29,3 @@ class DCCInterface:
     def submit_result(self, encodedBinary, binHash):
         pass
     
-
-# Testing functions
-shit = DCCInterface('0x7eb00cdb92a9e87dab53f64b23936718d5507c35')
-print(shit.get_owner())
