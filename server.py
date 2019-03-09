@@ -10,6 +10,7 @@ app = Flask(__name__)
 jobs = []
 jobs_details = []
 
+
 def thread_prune_entries():
     global jobs
     global jobs_details
@@ -55,8 +56,9 @@ def add_job():
         jobs.append(contract_id)
         return 'ok'
     except:
+        traceback.print_exc()
         return 'fail'
 
 if __name__ == '__main__':
     _thread.start_new_thread(thread_prune_entries, ())
-    app.run()
+    app.run(host="0.0.0.0")
