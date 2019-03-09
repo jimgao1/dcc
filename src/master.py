@@ -30,6 +30,7 @@ def main():
     parser.add_argument('private_key', metavar='PRIVATE_KEY', type=str, help='private key to use')
     parser.add_argument('price', metavar='PRICE', type=int, help='price in WEI')
     parser.add_argument('clients', metavar='CLIENTS', type=int, help='number of clients to distribute against')
+    parser.add_argument('--output', metavar='OUTPUT', type=str, default='compiled.out', help='file to output to')
     parser.add_argument('--ipfs', metavar='IPFS_ADDRESS', type=str, default='45.79.145.106:5001', help='ipfs address')
     parser.add_argument('--tracker', metavar='TRACKER_ADDRESS', type=str, default='http://45.79.145.106:5000', help='tracker address')
     parser.add_argument('--network', metavar='NETWORK', type=str, default='http://100.65.198.211:8545', help='ethereum network address')
@@ -68,7 +69,7 @@ def main():
             bin_data = get_file(ipfs, slave[1])
 
             if hash.hash(bin_data) == slave[0]:
-                open('output', 'wb').write(bin_data)
+                open(args.output, 'wb').write(bin_data)
                 return
         
         print("there were no good binaries")
