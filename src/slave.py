@@ -31,9 +31,6 @@ tasks_done = []
 docker_client = docker.from_env()
 
 while True:
-    # Sleep
-    time.sleep(5)
-
     # Get jobs
     r = requests.get(args.tracker + 'api/jobs')
     lst = json.loads(r.text.replace('\'', '"'))
