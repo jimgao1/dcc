@@ -33,7 +33,7 @@ def main():
     parser.add_argument('--output', metavar='OUTPUT', type=str, default='compiled.out', help='file to output to')
     parser.add_argument('--ipfs', metavar='IPFS_ADDRESS', type=str, default='45.79.145.106:5001', help='ipfs address')
     parser.add_argument('--tracker', metavar='TRACKER_ADDRESS', type=str, default='http://45.79.145.106:5000', help='tracker address')
-    parser.add_argument('--network', metavar='NETWORK', type=str, default='http://100.65.198.211:8545', help='ethereum network address')
+    parser.add_argument('--network', metavar='NETWORK', type=str, default='http://45.79.145.106:8545', help='ethereum network address')
 
     args = parser.parse_args()
 
@@ -69,6 +69,7 @@ def main():
             bin_data = get_file(ipfs, slave[1])
 
             if hash.hash(bin_data) == slave[0]:
+                print("Good sha256sum:", format(slave[0], 'x'))
                 open(args.output, 'wb').write(bin_data)
                 return
         

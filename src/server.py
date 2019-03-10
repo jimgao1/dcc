@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory, send_file
 from contracts import DCCInterface
 from web3 import Web3, HTTPProvider
 
@@ -11,7 +11,6 @@ app = Flask(__name__)
 jobs = []
 jobs_details = []
 web3 = Web3([HTTPProvider("http://10.8.3.1:8545")])
-
 
 def thread_prune_entries():
     global jobs
@@ -41,12 +40,16 @@ def thread_prune_entries():
         time.sleep(5)
 
 @app.route('/')
-def default():
-    return str(jobs_details)
+def index():
+    return send_file('../public/index.html')
+        
+@app.route('/<path:filename>')
+def default(filename):
+    return send_from_directory('../public', filename)
 
 @app.route('/api/jobs')
 def get_jobs():
-    return str(jobs)
+    return json.dumps(jobs)
 
 @app.route('/api/addjob', methods=['POST'])
 def add_job():
