@@ -69,6 +69,7 @@ def main():
             bin_data = get_file(ipfs, slave[1])
 
             if hash.hash(bin_data) == slave[0]:
+                print("Good sha256sum:", format(slave[0], 'x'))
                 open(args.output, 'wb').write(bin_data)
                 return
         
