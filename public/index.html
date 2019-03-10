@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>DCC - Distributed Compiler Collection</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+        <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+    </head>
+    <body>
+        <section class="section">
+            <div class="container">
+                <div class="columns">
+                    <div class="column">
+                        <h1 class="title">
+                            Distributed Compiler Collection
+                        </h1>
+                        <p class="subtitle">
+                            A system for verifying integrity and trustworthiness of binaries.
+                        </p>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <label class="label">Tracker URL</label>
+                        <input class="input" type="text"></input>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="graph">
+            <div class="container">
+                <canvas id="all-time-success"></canvas>
+            </div>
+        </section>
+        <section id="table">
+            <div class="container">
+            <table class="table">
+                <thead class="tr">
+                    <tr>
+                        <th>
+                            Job Hash
+                        </th>
+                        <th>
+                            Owner
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            Price
+                        </th>
+                        <th>
+                            Workers
+                        </th>
+                        <th>
+                            Seen
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="jobs-table">
+                </tbody>
+            </table>
+            </div>
+            </div>
+        </section>
+
+        <script>
+            window.addEventListener('load', () => {
+                if (typeof web3 !== 'undefined') {
+                    var w3 = new Web3(web3.currentProvider);
+                }
+
+                var allTime = document.getElementById("all-time-success");
+                var allTimeChart = new Chart(allTime, {
+                    responsive: true,
+                    type: 'pie',
+                    data: {
+                        datasets: [
+                            {
+                                data: [10, 20, 30],
+
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.2)',
+                                    'rgba(255, 206, 86, 0.2)',
+                                    'rgba(75, 192, 192, 0.2)',
+                                ],
+                                borderColor: [
+                                    'rgba(255,99,132,1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                ],
+                                borderWidth: 1,
+                            }
+                        ],
+                        labels: [
+                            'Failed',
+                            'In Progress',
+                            'Success'
+                        ],
+                    }
+                });
+
+                let currentJobs = new Set();
+                let jobSeen = new Map();
+
+                async function getContractState(contract) {
+                    let owner = contract.methods.owner().call();
+                    let progress = contract.methods.inProgress().call();
+                    let workers = contract.methods.numSlavesMax().call();
+                    let price = contract.methods.price().call();
+
+                    let status = Promise.resolve("In Progress");
+
+                    if (!await progress) {
+                        status = contract.getPastEvents("allEvents", {fromBlock: 0}).then(events => {
+                            if (events.length != 1) {
+                                return "In Progress";
+                            } else {
+                                if (events[0]['event'] == 'JobFailed') {
+                                    return "Failed";
+                                } else if (events[0]['event'] == 'JobCompleted') {
+                                    return "Complete";
+                                } else {
+                                    console.log(events);
+                                    return "In Progress";
+                                }
+                            }
+                        });
+                    }
+
+                    return {
+                        'address': contract.options.address,
+                        'owner': await owner,
+                        'status': await status,
+                        'workers': await workers,
+                        'price': await price,
+                        'seen': jobSeen.get(contract.options.address)
+                    };
+                }
+
+                function updateGraphics(states) {
+                    updateTable(states);
+                    updateGraph(states);
+                }
+
+                function updateTable(states) {
+                    let bodyTable = document.getElementById("jobs-table");
+
+                    let toRemove = document.getElementsByClassName("updatable");
+                    while (toRemove[0]) {
+                        bodyTable.removeChild(toRemove[0]);
+                    }
+                    
+                    for (var i = 0; i < states.length; i++) {
+                        let id = "job-" + states[i].address;
+                        if (document.getElementById(id) != null) {
+                            continue;
+                        }
+
+                        let row = document.createElement("tr");
+                        row.id = id;
+                        if (states[i].status == "In Progress") {
+                            row.className = "updatable";
+                        }
+                        let address = document.createElement("td");
+                        address.appendChild(document.createTextNode(states[i].address));
+                        row.appendChild(address);
+                        let owner = document.createElement("td");
+                        owner.appendChild(document.createTextNode(states[i].owner));
+                        row.appendChild(owner);
+                        let status = document.createElement("td");
+                        status.appendChild(document.createTextNode(states[i].status));
+                        row.appendChild(status);
+                        let price = document.createElement("td");
+                        price.appendChild(document.createTextNode(states[i].price));
+                        row.appendChild(price);
+                        let workers = document.createElement("td");
+                        workers.appendChild(document.createTextNode(states[i].workers));
+                        row.appendChild(workers);
+                        let seen = document.createElement("td");
+                        seen.appendChild(document.createTextNode(states[i].seen));
+                        row.appendChild(seen);
+                        bodyTable.appendChild(row);
+                    }
+                }
+
+                function updateGraph(states) {
+                    let progress = 0;
+                    let failed = 0;
+                    let error = 0;
+                    let success = 0;
+                    for (let i = 0; i < states.length; i++) {
+                        switch (states[i].status) {
+                            case "In Progress":
+                                progress++;
+                                break;
+                            case "Failed":
+                                failed++;
+                                break;
+                            case "Error":
+                                error++;
+                                break;
+                            case "Complete":
+                                success++;
+                                break;
+                        }
+                    }
+                    console.log(progress);
+                    console.log(failed);
+                    console.log(error);
+                    console.log(success);
+                    allTimeChart.data.datasets[0].data = [failed, progress, success];
+                    allTimeChart.update();
+                }
+
+                function updateJobs() {
+                    fetch('/api/jobs')
+                        .then(response => response.json())
+                        .then(jobs => {
+                            // Add new jobs
+                            jobs.forEach(job => {
+                                if (!currentJobs.has(job)) {
+                                    jobSeen.set(job, Date.now());
+                                }
+                                currentJobs.add(job);
+                            });
+
+                            // Get contracts for each hash
+                            let states = Array.from(currentJobs).map(job => {
+                                let contract = new w3.eth.Contract(abi, job);
+                                return getContractState(contract);
+                            });
+                            return Promise.all(states);
+                        })
+                        .then(states => updateGraphics(states));
+                }
+
+                updateJobs();
+                setInterval(updateJobs, 5000);
+            });
+
+        </script>
+        <script>
+            const abi = [{"constant":false,"inputs":[{"name":"_hash","type":"uint256"},{"name":"_encodedBinary","type":"string"}],"name":"submit","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"slave","type":"address"}],"name":"getSlave","outputs":[{"name":"","type":"uint256"},{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"inProgress","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"price","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"srcCode","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"numSlavesMax","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getSlaveAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_srcCode","type":"string"},{"name":"_numSlavesMax","type":"uint32"}],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"hash","type":"uint256"},{"indexed":false,"name":"goodSlaves","type":"uint32[]"}],"name":"JobCompleted","type":"event"},{"anonymous":false,"inputs":[],"name":"JobFailed","type":"event"}];
+        </script>
+    </body>
+</html>
